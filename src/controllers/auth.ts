@@ -17,7 +17,7 @@ export const login = async (
   if (!compareSync(password, user.password)) {
     throw new Error("Password incorrect");
   }
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET ?? "fallback_secret");
   res.json({ user, token });
 };
 
