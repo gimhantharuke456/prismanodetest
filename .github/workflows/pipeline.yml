@@ -11,75 +11,75 @@ jobs:
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js 20
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
-    - run: npm ci
-    - run: npm test
+      - uses: actions/checkout@v3
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm test
 
-  deploy-dev:
-    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Deploy to Dev EC2
-      env:
-        PRIVATE_KEY: ${{ secrets.DEV_EC2_SSH_PRIVATE_KEY }}
-        HOST: ${{ secrets.DEV_EC2_HOST }}
-        USER: ${{ secrets.EC2_USER }}
-      run: |
-        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
-          cd /path/to/your/project &&
-          git pull origin dev &&
-          npm ci &&
-          pm2 restart dev-app
-        '
+  # deploy-dev:
+  #   if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Deploy to Dev EC2
+  #     env:
+  #       PRIVATE_KEY: ${{ secrets.DEV_EC2_SSH_PRIVATE_KEY }}
+  #       HOST: ${{ secrets.DEV_EC2_HOST }}
+  #       USER: ${{ secrets.EC2_USER }}
+  #     run: |
+  #       echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+  #       ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
+  #         cd /path/to/your/project &&
+  #         git pull origin dev &&
+  #         npm ci &&
+  #         pm2 restart dev-app
+  #       '
 
-  deploy-qa:
-    if: github.ref == 'refs/heads/qa' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Deploy to QA EC2
-      env:
-        PRIVATE_KEY: ${{ secrets.QA_EC2_SSH_PRIVATE_KEY }}
-        HOST: ${{ secrets.QA_EC2_HOST }}
-        USER: ${{ secrets.EC2_USER }}
-      run: |
-        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
-          cd /path/to/your/project &&
-          git pull origin qa &&
-          npm ci &&
-          pm2 restart qa-app
-        '
+  # deploy-qa:
+  #   if: github.ref == 'refs/heads/qa' && github.event_name == 'push'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Deploy to QA EC2
+  #     env:
+  #       PRIVATE_KEY: ${{ secrets.QA_EC2_SSH_PRIVATE_KEY }}
+  #       HOST: ${{ secrets.QA_EC2_HOST }}
+  #       USER: ${{ secrets.EC2_USER }}
+  #     run: |
+  #       echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+  #       ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
+  #         cd /path/to/your/project &&
+  #         git pull origin qa &&
+  #         npm ci &&
+  #         pm2 restart qa-app
+  #       '
 
-  deploy-release:
-    if: github.ref == 'refs/heads/release' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Deploy to Release EC2
-      env:
-        PRIVATE_KEY: ${{ secrets.RELEASE_EC2_SSH_PRIVATE_KEY }}
-        HOST: ${{ secrets.RELEASE_EC2_HOST }}
-        USER: ${{ secrets.EC2_USER }}
-      run: |
-        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
-          cd /path/to/your/project &&
-          git pull origin release &&
-          npm ci &&
-          pm2 restart release-app
-        '
-    - name: Create Release Tag
-      run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        version=$(node -p "require('./package.json').version")
-        git tag -a v$version -m "Release $version"
-        git push origin v$version
+  # deploy-release:
+  #   if: github.ref == 'refs/heads/release' && github.event_name == 'push'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Deploy to Release EC2
+  #     env:
+  #       PRIVATE_KEY: ${{ secrets.RELEASE_EC2_SSH_PRIVATE_KEY }}
+  #       HOST: ${{ secrets.RELEASE_EC2_HOST }}
+  #       USER: ${{ secrets.EC2_USER }}
+  #     run: |
+  #       echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+  #       ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
+  #         cd /path/to/your/project &&
+  #         git pull origin release &&
+  #         npm ci &&
+  #         pm2 restart release-app
+  #       '
+  #   - name: Create Release Tag
+  #     run: |
+  #       git config user.name github-actions
+  #       git config user.email github-actions@github.com
+  #       version=$(node -p "require('./package.json').version")
+  #       git tag -a v$version -m "Release $version"
+  #       git push origin v$version
