@@ -1,21 +1,30 @@
-import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { NextFunction, Request, Response } from "express";
 import { compareSync, hashSync } from "bcrypt";
 import * as jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../secrets";
+import { BadRequestException } from "../exceptions/bad-requests";
+import { ErrorCodes } from "../exceptions/root";
+import { prismaClient } from "..";
+import { UnProcessableEntity } from "../exceptions/validation";
+import { SignupSchema } from "../schema/users";
+import { NotFoundException } from "../exceptions/not-found";
 
-export const login = async (
-  req: Request,
-  res: Response,
-  prisma: PrismaClient
-) => {
+export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-  const user = await prisma.user.findFirst({ where: { email: email } });
+  const user = await prismaClient.user.findFirst({ where: { email: email } });
   if (!user) {
-    throw new Error("User not found");
+    throw new NotFoundException(
+      "User not found",
+      ErrorCodes.USER_NOT_FOUND,
+      null
+    );
   }
   if (!compareSync(password, user.password)) {
-    throw new Error("Password incorrect");
+    throw new BadRequestException(
+      "Password incorrect",
+      ErrorCodes.INCORRECT_PASSWORD,
+      null
+    );
   }
   const token = jwt.sign({ userId: user.id }, JWT_SECRET ?? "fallback_secret");
   res.json({ user, token });
@@ -24,15 +33,21 @@ export const login = async (
 export const signup = async (
   req: Request,
   res: Response,
-  prisma: PrismaClient
+  next: NextFunction
 ) => {
+  SignupSchema.parse(req.body);
   const { email, password, name } = req.body;
 
-  let user = await prisma.user.findFirst({ where: { email: email } });
+  let user = await prismaClient.user.findFirst({ where: { email: email } });
   if (user) {
-    return Error("User already exists");
+    new BadRequestException(
+      "User already exists",
+      ErrorCodes.USER_ALREADY_EXISTS,
+      null
+    );
   }
-  user = await prisma.user.create({
+
+  user = await prismaClient.user.create({
     data: {
       email: email,
       password: hashSync(password, 10),

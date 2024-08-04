@@ -1,6 +1,7 @@
-import { Router } from "express";
+import { NextFunction, Router, Request, Response } from "express";
 import { login, signup } from "../controllers/auth";
 import { prismaClient } from "..";
+import { errorHandler } from "../error-handler";
 
 const authRoutes: Router = Router();
 
@@ -31,7 +32,7 @@ const authRoutes: Router = Router();
  *       400:
  *         description: Invalid credentials
  */
-authRoutes.post("/login", (req, res) => login(req, res, prismaClient));
+authRoutes.post("/login", errorHandler(login));
 
 /**
  * @swagger
@@ -62,6 +63,6 @@ authRoutes.post("/login", (req, res) => login(req, res, prismaClient));
  *       400:
  *         description: User already exists
  */
-authRoutes.post("/signup", (req, res) => signup(req, res, prismaClient));
+authRoutes.post("/signup", errorHandler(signup));
 
 export default authRoutes;

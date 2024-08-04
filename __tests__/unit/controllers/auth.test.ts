@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
 import { prismaMock } from "../../mocks/prisma";
@@ -10,6 +10,7 @@ jest.mock("jsonwebtoken");
 describe("Auth Controller", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
+  let next: Partial<NextFunction>;
   let responseObject = {};
 
   beforeEach(() => {
@@ -41,7 +42,7 @@ describe("Auth Controller", () => {
       (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
       (jwt.sign as jest.Mock).mockReturnValue("mockedToken");
 
-      await login(mockRequest as Request, mockResponse as Response, prismaMock);
+      await login(mockRequest as Request, mockResponse as Response);
 
       expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
         where: { email: "test@example.com" },
@@ -82,7 +83,7 @@ describe("Auth Controller", () => {
       await signup(
         mockRequest as Request,
         mockResponse as Response,
-        prismaMock
+        next as NextFunction
       );
 
       expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
